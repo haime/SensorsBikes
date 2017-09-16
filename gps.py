@@ -13,7 +13,7 @@ class GPS(object):
 		self.longitude =0.0
 		self.longitudeDegrees =0.0
 		self.altitude =0.0
-		self.date = time.localtime(time.time())
+		self.date = 0.0
 		self.satellites=0
 		self.fixquality=0
 		self.HDOP=0.0
@@ -113,6 +113,8 @@ class GPS(object):
 x = GPS()
 f= open('example.txt','r')
 for line in f:
-	x.parse(line) 		
+	x.parse(line)
+	print "Latitude: "+str(x.latitudeDegrees)+" Longitude: "+str(x.longitudeDegrees)+" Altitude: " + str(x.altitude )
+	print time.asctime(time.localtime(x.date))
 
 
