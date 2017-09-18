@@ -115,8 +115,10 @@ x = GPS()
 ser= serial.Serial('/dev/ttyAMA0',9600)
 #for line in f:
 while True:
-	x.parse(ser.readline())
-	print "Latitude: "+str(x.latitudeDegrees)+" Longitude: "+str(x.longitudeDegrees)+" Altitude: " + str(x.altitude )
-	print time.asctime(time.localtime(x.date))
-
+	try:
+		x.parse(ser.readline())
+		print "Latitude: "+str(x.latitudeDegrees)+" Longitude: "+str(x.longitudeDegrees)+" Altitude: " + str(x.altitude )
+		print time.asctime(time.localtime(x.date))
+	except ValueError:
+		print colored("No data received",'red')
 
