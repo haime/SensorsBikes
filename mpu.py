@@ -94,7 +94,26 @@ class mpuSensor(object):
 		self.magOff = [0.0, 0.0, 0.0]
 		self.magScale = [0.0, 0.0, 0.0]
 		bus= smbus.SMBus(1)
-		bus.write_byte_data(MPU9150A_I2C_ADDR,)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_PWR_MGMT_1,self.BIT_H_RESET)
+		time.sleep(0.01)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_SMPLRT_DIV,0X00)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_CONFIG, self.BITS_DLPF_CFG_42HZ)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_CONFIG,self.BITS_FS_1000DPS)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_CONFIG,0X10)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_FIFO_EN,self.BIT_FIFO_DIS)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_INT_PIN_CFG,0X02)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_INT_ENABLE,0X00)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_USER_CTRL,0X00)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_PWR_MGMT_1,0X00)
+		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_PWR_MGMT_2,0X00)
+		bus.write_byte_data(self.MAG_I2C_ADDR,self.MAGREG_CNTL,0X01)
+		time.sleep(0.01)
+
+	def readAccel(self):
+		
+		
+	
+
 
 
 
