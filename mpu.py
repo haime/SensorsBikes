@@ -84,15 +84,15 @@ class mpuSensor(object):
 	BIT_FIFO_DIS                = 0x00
 
 	def __init__(self):
-		self.accel= [0.0, 0.0, 0.0]
-		self.gyro = [0.0, 0.0, 0.0]
-		self.mag = [0.0, 0.0, 0.0]
+		self.accel= [0, 0, 0]
+		self.gyro = [0, 0, 0]
+		self.mag = [0, 0, 0]
 		self.temp = 0.0;
 		self.gdt = 0;
-		self.calibAccel = [0.0, 0.0, 0.0]
-		self.calibGyro =[0.0, 0.0, 0.0]
-		self.magOff = [0.0, 0.0, 0.0]
-		self.magScale = [0.0, 0.0, 0.0]
+		self.calibAccel = [0, 0, 0]
+		self.calibGyro =[0, 0, 0]
+		self.magOff = [0, 0, 0]
+		self.magScale = [0, 0, 0]
 		bus= smbus.SMBus(1)
 		bus.write_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_PWR_MGMT_1,self.BIT_H_RESET)
 		time.sleep(0.01)
@@ -120,29 +120,29 @@ class mpuSensor(object):
 		bus= smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_L)
-		self.accel[0]=((valueH<<8) | valueL)
+		self.accel[0]=int(((valueH<<8) | valueL))
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_L)
-		self.accel[1]=((valueH<<8) | valueL)
+		self.accel[1]=int(((valueH<<8) | valueL))
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_ZOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_ZOUT_L)
-		self.accel[2]=((valueH<<8) | valueL)
+		self.accel[2]=int(((valueH<<8) | valueL))
 
 	def readGyro(self):
 		bus= smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_XOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_XOUT_L)
-		self.gyro[0]=((valueH<<8) | valueL)
+		self.gyro[0]=int(((valueH<<8) | valueL))
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_YOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_YOUT_L)
-		self.gyro[1]=((valueH<<8) | valueL)
+		self.gyro[1]=int(((valueH<<8) | valueL))
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_ZOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_ZOUT_L)
-		self.gyro[2]=((valueH<<8) | valueL)
+		self.gyro[2]=int(((valueH<<8) | valueL))
 
 	def readTemp(self):
 		bus = smbus.SMBus(1)
@@ -155,7 +155,23 @@ class mpuSensor(object):
 		bus = smbus.SMBus(1)
 		dataReady=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_ST1)
 		if dataReady:
-			print 1;
+			valueH=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HXH)
+			valueL=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HXL)
+			self.mag[0]= int(((valueH<<8) | valueL))
+
+			valueH=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HYH)
+			valueL=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HYL)
+			self.mag[1]= int(((valueH<<8) | valueL))
+
+			valueH=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HZH)
+			valueL=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HZL)
+			self.mag[2]= int(((valueH<<8) | valueL))
+			print mag
+		else:
+			self.mag = [0,0,0]
+		bus.write_byte_data(self.MAG_I2C_ADDR,self.MAGREG_CNTL,0X01)
+
+
 
 mpu = mpuSensor()
 
