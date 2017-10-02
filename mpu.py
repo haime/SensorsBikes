@@ -87,7 +87,7 @@ class mpuSensor(object):
 		self.accel= [0.0, 0.0, 0.0]
 		self.gyro = [0.0, 0.0, 0.0]
 		self.mag = [0.0, 0.0, 0.0]
-		self.temp = 0;
+		self.temp = 0.0;
 		self.gdt = 0;
 		self.calibAccel = [0.0, 0.0, 0.0]
 		self.calibGyro =[0.0, 0.0, 0.0]
@@ -148,20 +148,26 @@ class mpuSensor(object):
 		bus = smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_L)
-		t=((valueH<<8) | valueL)
+		t=int(((valueH<<8) | valueL))
 		self.temp = (t/340)+36.5
 
+	def readMagnetometer(self):
+		bus = smbus.SMBus(1)
+		dataReady=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_ST1)
+		if dataReady:
+			print 1;
 
 mpu = mpuSensor()
 
 
-for x in xrange(1,10000):
+for x in xrange(1,1000):
 	mpu.readGyro()
 	print mpu.gyro
 
 print mpu.detect()
 mpu.readTemp()
 print mpu.temp
+mpu.readMagnetometer()
 
 
 
