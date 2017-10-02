@@ -166,7 +166,7 @@ class mpuSensor(object):
 			valueH=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HZH)
 			valueL=bus.read_byte_data(self.MAG_I2C_ADDR,self.MAGREG_HZL)
 			self.mag[2]= int(((valueH<<8) | valueL))
-			print mag
+			print self.mag
 		else:
 			self.mag = [0,0,0]
 		bus.write_byte_data(self.MAG_I2C_ADDR,self.MAGREG_CNTL,0X01)
