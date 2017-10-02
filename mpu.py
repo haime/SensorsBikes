@@ -112,7 +112,7 @@ class mpuSensor(object):
 	def detect(self):
 		bus= smbus.SMBus(1)
 		d = bus.read_byte_data(self.MPU9150A_I2C_ADDR, self.MPUREG_WHOAMI)
-		if d&0x7e == 0x68:
+		if d&0x7E == 0x68:
 			return True
 		return False		
 	
@@ -120,7 +120,9 @@ class mpuSensor(object):
 		bus= smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_L)
+		
 		self.accel[0]=int(((valueH<<8) | valueL))
+
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_L)
@@ -148,6 +150,9 @@ class mpuSensor(object):
 		bus = smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_L)
+		print valueH
+		print valueL
+		print valueH<<8
 		t=int(((valueH<<8) | valueL))
 		self.temp = (t/340)+36.5
 
@@ -174,11 +179,8 @@ class mpuSensor(object):
 
 
 mpu = mpuSensor()
-
-
-for x in xrange(1,1000):
-	mpu.readGyro()
-	print mpu.gyro
+mpu.readGyro()
+print mpu.gyro
 
 print mpu.detect()
 mpu.readTemp()
