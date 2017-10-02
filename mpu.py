@@ -150,11 +150,9 @@ class mpuSensor(object):
 		bus = smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_L)
-		print hex(valueH)
-		print hex(valueL)
-		print hex(valueH<<8)
-		print int((valueH<<8) | valueL,16)
 		t= (valueH<<8) | valueL
+		print hex(t)
+		t=-(t & 0x8000) | (t & 0x7fff)
 		self.temp = (t/340)+36.5
 
 	def readMagnetometer(self):
