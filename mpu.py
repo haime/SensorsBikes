@@ -145,6 +145,7 @@ class mpuSensor(object):
 		self.gyro[2]=((valueH<<8) | valueL)
 
 	def readTemp(self):
+		bus = smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_L)
 		t=((valueH<<8) | valueL)
