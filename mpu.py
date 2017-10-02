@@ -109,8 +109,13 @@ class mpuSensor(object):
 		bus.write_byte_data(self.MAG_I2C_ADDR,self.MAGREG_CNTL,0X01)
 		time.sleep(0.01)
 
-	def readAccel(self):
-		
+	def detect(self):
+		bus= smbus.SMBus(1)
+		d = bus.read_byte_data(self.MPU9150A_I2C_ADDR, MPUREG_WHOAMI)
+		if d&0x7e == 0x68:
+			print 1
+		else:
+			print 0
 		
 	
 
