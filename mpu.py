@@ -111,19 +111,34 @@ class mpuSensor(object):
 
 	def detect(self):
 		bus= smbus.SMBus(1)
-		d = bus.read_byte_data(self.MPU9150A_I2C_ADDR, MPUREG_WHOAMI)
+		d = bus.read_byte_data(self.MPU9150A_I2C_ADDR, self.MPUREG_WHOAMI)
 		if d&0x7e == 0x68:
-			print 1
-		else:
-			print 0
-		
+			return True
+		return False		
 	
+	def readAccel(self):
+		bus= smbus.SMBus(1)
+		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_H)
+		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_L)
+		self.accel[0]=((valueH<<8) | valueL)
 
+		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_H)
+		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_L)
+		self.accel[1]=((valueH<<8) | valueL)
+
+		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_ZOUT_H)
+		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_ZOUT_L)
+		self.accel[2]=((valueH<<8) | valueL)
 
 
 
 
 mpu = mpuSensor()
+print mpu.detect()
+
+for x in xrange(1,10000):
+	mpu.readAccel()
+	print mpu.accel
 
 
 #bus = smbus.SMBus(1)
