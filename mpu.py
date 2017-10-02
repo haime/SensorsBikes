@@ -153,7 +153,7 @@ class mpuSensor(object):
 		print hex(valueH)
 		print hex(valueL)
 		print hex(valueH<<8)
-		print (valueH<<8) | valueL
+		print int((valueH<<8) | valueL,16)
 		t= (valueH<<8) | valueL
 		self.temp = (t/340)+36.5
 
