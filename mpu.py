@@ -109,6 +109,9 @@ class mpuSensor(object):
 		bus.write_byte_data(self.MAG_I2C_ADDR,self.MAGREG_CNTL,0X01)
 		time.sleep(0.01)
 
+	def valToShort(self, value):
+		return -(value & 0x8000) | (value & 0x7fff)
+
 	def detect(self):
 		bus= smbus.SMBus(1)
 		d = bus.read_byte_data(self.MPU9150A_I2C_ADDR, self.MPUREG_WHOAMI)
@@ -150,9 +153,7 @@ class mpuSensor(object):
 		bus = smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_TEMP_OUT_L)
-		t= (valueH<<8) | valueL
-		print hex(t)
-		t=-(t & 0x8000) | (t & 0x7fff)
+		t= valToShort((valueH<<8) | valueL)
 		self.temp = (t/340)+36.5
 
 	def readMagnetometer(self):
