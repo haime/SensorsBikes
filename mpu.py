@@ -1,6 +1,8 @@
 #!/usr/bin/python
 import smbus
 import time
+import numpy as np
+import math
 
 class mpuSensor(object):
 	"""docstring for mpuSensor"""
@@ -83,6 +85,12 @@ class mpuSensor(object):
 	BIT_FIFO_EN                 = 0x78
 	BIT_FIFO_DIS                = 0x00
 
+
+	gyroGAIN = 0.0048
+	twoKp = 2.0 * 0.04
+	twoKi = 2.0 * 0.002           
+	sampleFreq = 1000   
+
 	def __init__(self):
 		self.accel= [0, 0, 0]
 		self.gyro = [0, 0, 0]
@@ -91,6 +99,9 @@ class mpuSensor(object):
 		self.gdt = 0;
 		self.calibAccel = [0, 0, 0]
 		self.calibGyro =[0, 0, 0]
+		self.outAccel=[0,0,0]
+		self.outGyro =[0,0,0]
+		self.outMag =[0,0,0]
 		self.magOff = [0, 0, 0]
 		self.magScale = [0, 0, 0]
 		bus= smbus.SMBus(1)
@@ -112,6 +123,18 @@ class mpuSensor(object):
 	def valToShort(self, value):
 		return -(value & 0x8000) | (value & 0x7fff)
 
+	# def valToFloat(self,value):
+	# 	s= value>>15
+	# 	t= value&0x03FF
+	# 	e= value&0x7C00
+	# 	e= e>>10
+	# 	v=0.0
+	# 	if e>0 and e<32:
+	# 		v= pow(-1,s)*pow(2,e-15)*(1+(pow(2,-10)*t))
+	# 	if e==0 and t!=0:
+	# 		v=v= pow(-1,s)*pow(2,-14)*(pow(2,-10)*t)
+	#	return v
+
 	def detect(self):
 		bus= smbus.SMBus(1)
 		d = bus.read_byte_data(self.MPU9150A_I2C_ADDR, self.MPUREG_WHOAMI)
@@ -123,13 +146,13 @@ class mpuSensor(object):
 		bus= smbus.SMBus(1)
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_XOUT_L)
-		
 		self.accel[0]=self.valToShort((valueH<<8) | valueL)
-
+		
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_YOUT_L)
 		self.accel[1]=self.valToShort((valueH<<8) | valueL)
+		
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_ZOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_ACCEL_ZOUT_L)
@@ -140,14 +163,19 @@ class mpuSensor(object):
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_XOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_XOUT_L)
 		self.gyro[0]=self.valToShort((valueH<<8) | valueL)
+		#self.gyro[0]=(valueH<<8) | valueL
+		
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_YOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_YOUT_L)
 		self.gyro[1]=self.valToShort((valueH<<8) | valueL)
+		#self.gyro[1]=(valueH<<8) | valueL
+		
 
 		valueH=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_ZOUT_H)
 		valueL=bus.read_byte_data(self.MPU9150A_I2C_ADDR,self.MPUREG_GYRO_ZOUT_L)
 		self.gyro[2]=self.valToShort((valueH<<8) | valueL)
+		#self.gyro[2]=(valueH<<8) | valueL
 
 	def readTemp(self):
 		bus = smbus.SMBus(1)
@@ -176,18 +204,133 @@ class mpuSensor(object):
 			self.mag = [0,0,0]
 		bus.write_byte_data(self.MAG_I2C_ADDR,self.MAGREG_CNTL,0X01)
 
+	def readAHSR(self):
+
+		readAccel()
+		readGyro()
+		readTemp()
+		readMagnetometer()
+
+		ax=self.accel[0]-self.calibAccel[0] 
+		ay=self.accel[1]-self.calibAccel[1]
+		az=self.accel[2]-self.calibAccel[2]
+
+		gx=(self.gyro[0]-self.calibGyro[0])*gyroGAIN
+		gy=(self.gyro[1]-self.calibGyro[1])*gyroGAIN
+		gz=(self.gyro[2]-self.calibGyro[2])*gyroGAIN
+
+		mx=(self.mag[0]-self.magOff[0])/self.magScale[0]
+		my=(self.mag[1]-self.magOff[1])/self.magScale[1]
+		mz=(self.mag[2]-self.magOff[2])/self.magScale[2]
+
+		if not(ax==0.0 and ay==0.0 and az==0.0):
+			norm = math.sqrt(ax*ax+ay*ay+az*az)
+			ax= ax/norm
+			ay= ay/norm
+			az= az/norm
+			norm = math.sqrt(mx*mx+my*my+mz*mz)
+			mx= mx/norm 
+			my= my/norm 
+			mz= mz/norm 
+
+			q0q0 = q0 * q0
+			q0q1 = q0 * q1
+			q0q2 = q0 * q2
+			q0q3 = q0 * q3
+			q1q1 = q1 * q1
+			q1q2 = q1 * q2
+			q1q3 = q1 * q3
+			q2q2 = q2 * q2
+			q2q3 = q2 * q3
+			q3q3 = q3 * q3
+
+			hx = 2 * (mx * (0.5 - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2))
+			hy = 2 * (mx * (q1q2 + q0q3) + my * (0.5 - q1q1 - q3q3) + mz * (q2q3 - q0q1))
+			bx = math.sqrt(hx * hx + hy * hy)
+			bz = 2 * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5 - q1q1 - q2q2))
+
+			halfvx = q1q3 - q0q2
+			halfvy = q0q1 + q2q3
+			halfvz = q0q0 - 0.5 + q3q3
+
+			halfwx = bx * (0.5 - q2q2 - q3q3) + bz * (q1q3 - q0q2)
+			halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3)
+			halfwz = bx * (q0q2 + q1q3) + bz * (0.5 - q1q1 - q2q2)
+
+			halfex = (ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy)
+			halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz)
+			halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx)
+
+			if twoKi>0:
+				integralFBx = integralFBx+(twoKiDef*halfex * (1/sampleFreq))
+				integralFBy = integralFBy+(twoKiDef*halfey * (1/sampleFreq))
+				integralFBz = integralFBz+(twoKiDef*halfez * (1/sampleFreq))
+				gx = gx + integralFBx;        // apply integral feedback
+				gy = gy + integralFBy;
+				gz = gz + integralFBz;
+			else:
+				integralFBx = 0.0
+				integralFBy = 0.0
+				integralFBz = 0.0
+
+			gx =gx + (twoKp * halfex)
+			gy =gy + (twoKp * halfey)
+			gz =gz + (twoKp * halfez)
+
+		gx= gx * (0.5* (1/sampleFreq))
+		gy= gy * (0.5* (1/sampleFreq))
+		gz= gz * (0.5* (1/sampleFreq))
+
+		qa = q0
+		qb = q1
+		qc = q2
+		q0 = q0 + (-qb * gx - qc * gy - q3 * gz)
+		q1 = q1 + (qa * gx + qc * gz - q3 * gy)
+		q2 = q2 + (qa * gy - qb * gz + q3 * gx)
+		q3 = q3 + (qa * gz + qb * gy - qc * gx)
+
+		Norm = math.sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3)
+		q0 = q0 / Norm
+		q1 = q1 / Norm
+		q2 = q2 / Norm
+		q3 = q3 / Norm
+
+		self.outAccel[1]=ax
+		self.outAccel[2]=ay
+		self.outAccel[3]=az
+		self.outGyro[1]=gx
+		self.outGyro[2]=gy
+		self.outGyro[3]=gz
+		self.outMag[1]=mx
+		self.outMag[2]=my
+		self.outMag[3]=mz
+
+
+
+
 
 
 mpu = mpuSensor()
-print mpu.detect()
-mpu.readAccel()
-print mpu.accel
-mpu.readGyro()
-print mpu.gyro
+#print mpu.detect()
+#mpu.readAccel()
+
+
+#print hex(mpu.gyro[0]),hex(mpu.gyro[1]),hex(mpu.gyro[2]) 
+l=[0.0,0.0,0.0]
+for x in xrange(1,100):
+	mpu.readGyro()
+	l[0]=l[0]+mpu.gyro[0]
+	l[1]=l[1]+mpu.gyro[1]
+	l[2]=l[2]+mpu.gyro[2]
+
+l[0]=l[0]/100
+l[1]=l[1]/100
+l[2]=l[2]/100
+print l
 mpu.readTemp()
 print mpu.temp
-mpu.readMagnetometer()
-print mpu.mag
+#mpu.readMagnetometer()
+#print mpu.mag
 
 
 #bus = smbus.SMBus(1)
